@@ -1,5 +1,5 @@
 import itertools
-import pandas as pd
+import pandas as pd #It is necessary to install pandas.
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.model_selection import train_test_split
@@ -9,69 +9,63 @@ import numpy as np
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import  GridSearchCV
 
-# Exemplo de conjunto de dados com 3 colunas
 
-# Carregar os dados
-ds = pd.read_excel('dados.xlsx')
+#Load database
+ds = pd.read_excel('dados.xlsx') #download from https://archive.ics.uci.edu/dataset/294/combined+cycle+power+plant
 
-# Separar as variáveis independentes (features) da variável dependente (target)
+# Separate the independent variables (features) from the dependent variable (target)
 x = ds.iloc[:, :-1]
 y = ds.iloc[:, -1]
 
-resultsmedia = [] #Lista para armazenar os resultados de todos os testes
-results = [] #Lista para armazenar os resultados para cada media dos n testes
 
-k_range = list(range(1, 21))#varia o k de 1 até 30
+resultsavg = [] #List to store the results of all tests.
+results = [] #List to store the results for each mean of the n tests.
+
+k_range = list(range(1, 21))# k varies from 1 to 20
 
 results = []  # Lista para armazenar os resultados para cada n
 best_models = {}  # Dicionário para armazenar o melhor modelo para cada n
 # Loop para treinar e salvar o melhor modelo para cada valor de n
 
-# Definir os parâmetros para a otimização
+#Set the hyperparameters for optimization.
 param_grid= {
-    'n_neighbors': k_range,  # Valores a serem testados para o número de vizinhos
-    'weights': ['uniform', 'distance'],  # Valores a serem testados para o parâmetro weights
-    #‘distance’ os pesos são calculados pelo inverso da distância. Nesse caso, vizinhos 
-    #mais próximos do ponto de consulta terão uma influência maior do que vizinhos que 
-    #estão mais distantes.
-    # ‘uniform’ Todos os pontos em cada vizinhança têm pesos iguais.
-    'p': [1, 2, 3]  # Valores a serem testados para o parâmetro 
+    'n_neighbors': k_range,  # Values to be tested for the number of neighbors.
+    'weights': ['uniform', 'distance'],  #Values to be tested for the parameter weights.
+    #‘distance’ The weights are calculated as the inverse of the distance.
+    # ‘uniform’ All points in each neighborhood have equal weights.
+    'p': [1, 2, 3]  #distance calculation
     #p=1 -> manhattan_distance ,
     #p=2 -> euclidean_distance
     #p=3 ->Minkowski (l_3)
 }   
-# Criar o modelo de regressão KNN
+
+#Create the KNN regression model.
 model = KNeighborsRegressor()
 
+# Columns for combination.
+columns_combination = ['AT', 'V', 'AP', 'RH']
 
-# Colunas para combinação
-colunas_combinacao = ['AT', 'V', 'AP', 'RH']
-
-# Gerar combinações entre os nomes das colunas
+# Generate combinations between the column names.
 for i in range(1,5):
-    comb_colunas = list(itertools.combinations(colunas_combinacao, i))
-    # Loop para imprimir as combinações
-    for comb in comb_colunas:
+    comb_columns = list(itertools.combinations(columns_combination, i))
+    for comb in comb_columns:
         resultsaux = []
         X = x[list(comb)].copy()
         for n in range(1, 101): 
-            model = KNeighborsRegressor()
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3,random_state=n)
-            # Realizar a busca em grid com validação cruzada
+            # Perform grid search with cross-validation and score (MAE)
             grid_search = GridSearchCV(model, param_grid, cv=5, scoring='neg_mean_absolute_error')
             grid_search.fit(X_train, y_train)
-            # Obter o modelo correspondente e parametros
             best_model = grid_search.best_estimator_
-    
-            # Calcular o MAPE manualmente após a validação cruzada
+            # Calculate the MAPE manually after cross-validation.
             y_pred = best_model.predict(X_test)
-            r2 = r2_score(y_test, y_pred)
-            rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-            mape=mean_absolute_percentage_error(y_test, y_pred)
-            mae=mean_absolute_error(y_test, y_pred)
+            r2 = r2_score(y_test, y_pred) #save R2
+            rmse = np.sqrt(mean_squared_error(y_test, y_pred))#save RMSE
+            mape=mean_absolute_percentage_error(y_test, y_pred)#save MAPE
+            mae=mean_absolute_error(y_test, y_pred)#save MAE
             resultsaux.append({ 
                 'random_state': n,
-                'Índice': list(comb),
+                'Index': list(comb),
                 'R²': r2,
                 'MAE': mae,
                 'RMSE': rmse,
@@ -79,17 +73,17 @@ for i in range(1,5):
             })
             results.append({
                 'random_state': n,
-                'Índice': list(comb),
+                'Index': list(comb),
                 'R²': r2,
                 'MAE': mae,
                 'RMSE': rmse,
                 'MAPE': mape
             })
         
-        df_results_aux = pd.DataFrame(resultsaux).set_index('Índice')
+        df_results_aux = pd.DataFrame(resultsaux).set_index('Index')
 
-        resultsmedia.append({
-            'Índice': comb,
+        resultsavg.append({
+            'Index': comb,
             'R²': df_results_aux['R²'].mean(),
             'MAE': df_results_aux['MAE'].mean(),
             'RMSE': df_results_aux['RMSE'].mean(),
@@ -97,10 +91,9 @@ for i in range(1,5):
         })
 
         
-df_results = pd.DataFrame(results).set_index('Índice')
-nome_arquivo = 'resultados_knn_combinacao.xlsx'  # Nome do arquivo Excel
-df_results.to_excel(nome_arquivo)  # Salvar o DataFrame no arquivo Excel
-df_results_media = pd.DataFrame(resultsmedia).set_index('Índice')
-nome_arquivo = 'resultados_knn_combinacao_media.xlsx'  # Nome do arquivo Excel
-df_results_media.to_excel(nome_arquivo)  # Salvar o DataFrame no arquivo Excel
-
+df_results = pd.DataFrame(results).set_index('Index')
+file_name = 'results_knn_combination.xlsx'  # Excel file name
+df_results.to_excel(file_name) # Save the DataFrame to the Excel file.
+df_results_avg = pd.DataFrame(resultsavg).set_index('Index')
+file_name = 'results_knn_combination_average.xlsx'  # Excel file name
+df_results_avg.to_excel(file_name)  # Save the DataFrame to the Excel file
