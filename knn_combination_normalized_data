@@ -20,7 +20,7 @@ y = ds.iloc[:, -1]
 resultsavg = [] #List to store the results of all tests.
 results = [] #List to store the results for each mean of the n tests.
 
-k_range = list(range(1, 21))# k varies from 1 to 21
+k_range = list(range(1, 21))# k varies from 1 to 20
 
 best_models = {}  #Dictionary to store the best model for each n.
 
@@ -55,7 +55,7 @@ for i in range(1,5):
     for comb in comb_columns:
         resultsaux = []
         X = x[list(comb)].copy()
-        for n in range(1, 2): 
+        for n in range(1, 101): 
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3,random_state=n)
             # Perform grid search with cross-validation and score (MAE)
             grid_search = GridSearchCV(model, param_grid, cv=5, scoring='neg_mean_absolute_error')
