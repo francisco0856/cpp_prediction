@@ -1,0 +1,37 @@
+import pandas as pd #It is necessary to install pandas.
+from sklearn.tree import DecisionTreeRegressor 
+from sklearn.model_selection import train_test_split
+
+# Load database
+df = pd.read_excel('dados.xlsx') #download from https://archive.ics.uci.edu/dataset/294/combined+cycle+power+plant 
+    
+#Separate the independent variables (features) from the dependent variable (target).)
+X = df.iloc[:, :-1]
+y = df.iloc[:, -1]
+    
+# Split the dataset into training and testing.
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=13)
+    
+# Generate an array of ccp_alpha values.
+path = DecisionTreeRegressor(random_state=13).cost_complexity_pruning_path(X_train, y_train)
+ccp_alphas, impurities = path.ccp_alphas, path.impurities
+    
+# List to store the values of ccp_alpha and R2
+ccp_alpha_values = []
+r2_scores = []
+    
+# Loop to train and evaluate models for each value of ccp_alpha.
+for ccp_alpha in ccp_alphas:
+    model = DecisionTreeRegressor(random_state=13, ccp_alpha=ccp_alpha)
+    model.fit(X_train, y_train)
+    ccp_alpha_values.append(ccp_alpha)
+    r2_scores.append(model.score(X_test, y_test))
+    
+# Create a dataframe with ccp_alpha and R² values in descending order
+df_results = pd.DataFrame({'ccp_alpha': ccp_alpha_values, 'R2_score': r2_scores})
+df_results = df_results.sort_values(by='R2_score', ascending=False)
+df_results.to_excel('ccp_alphas.xlsx', index=False)
+
+
+
+   
