@@ -11,7 +11,7 @@ from sklearn.model_selection import  GridSearchCV
 from sklearn.preprocessing import StandardScaler
 
 #Load database
-ds = pd.read_excel('dados.xlsx') #download from https://archive.ics.uci.edu/dataset/294/combined+cycle+power+plant
+ds = pd.read_excel('database.xlsx') #download from https://archive.ics.uci.edu/dataset/294/combined+cycle+power+plant
 
 # Separate the independent variables (features) from the dependent variable (target)
 x = ds.iloc[:, :-1]
